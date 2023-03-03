@@ -31,7 +31,7 @@ class Solution:
             route = Route([p.patients[patient_id] for patient_id in route])
             routes.append(route)
         self.routes = routes
-        self.matrix = route_indexes + 1
+        self.matrix = route_indexes
 
     def __len__(self):
         return len(self.routes)
@@ -58,10 +58,10 @@ class Population:
         return self.solutions[index]
 
 def generate_sub_arrays(N,n):
-    arr = np.arange(0, N)
+    arr = np.arange(1, N+1)
     permuted_arr = np.random.permutation(arr)
 
-    indices = np.random.choice(np.arange(1, N), size=n, replace=False)
+    indices = np.random.choice(np.arange(2, N+1), size=n, replace=False)
     indices.sort()
 
     sub_arrays = np.split(permuted_arr, indices)

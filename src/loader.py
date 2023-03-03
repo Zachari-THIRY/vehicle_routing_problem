@@ -1,4 +1,5 @@
 import json
+import numpy as np
 
 class Problem:
     def __init__(self, filePath: str):
@@ -11,8 +12,9 @@ class Problem:
         self.nbr_nurses = data["nbr_nurses"]
         self.Capacity_nurse = data["capacity_nurse"]
         self.nbr_patients = len(data["patients"])
-        self.patients = [Patient(id, data["patients"][id]) for id in data["patients"]]
+        self.patients = {int(id): Patient(int(id), data["patients"][id]) for id in data["patients"]}
         self.depot = Depot(data["depot"])
+        self.d = np.array(data["travel_times"])
 
 
 class Depot:
