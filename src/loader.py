@@ -11,7 +11,7 @@ class Problem:
         self.nbr_nurses = data["nbr_nurses"]
         self.Capacity_nurse = data["capacity_nurse"]
         self.nbr_patients = len(data["patients"])
-        self.patients = {Patient(id, data["patients"][id]) for id in data["patients"]}
+        self.patients = [Patient(id, data["patients"][id]) for id in data["patients"]]
         self.depot = Depot(data["depot"])
 
 
