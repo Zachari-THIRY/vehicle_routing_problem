@@ -1,9 +1,10 @@
 import numpy as np
+from utils import get_distance
 
 class Route:
     def __init__(self, patients) -> None:
         self.patients = patients
-        self.ids = [patient.id for patient in patients]
+        self.ids = np.array([patient.id for patient in patients])
 
     def __len__(self):
         return len(self.ids)
@@ -22,6 +23,14 @@ class Route:
             patient = self.patients[self.current_index]
             self.current_index += 1
             return patient
+    def travel_time(self, p):
+        d = p.d
+        time = d[0][self[0].id]
+        for i in range(len(self)-1):
+            time += get_distance(d, self[i], self[i+1])
+        time += d[self[-1].id][0]
+        return time
+
 
 class Solution:
     def __init__(self, p) -> None:
