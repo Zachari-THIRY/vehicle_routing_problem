@@ -1,5 +1,6 @@
 import numpy as np
 from utils import get_distance
+import random
 
 class Route:
     def __init__(self, patients) -> None:
@@ -24,6 +25,9 @@ class Route:
             self.current_index += 1
             return patient
     def travel_time(self, p):
+
+        if len(self) == 0 : return 0
+
         d = p.d
         time = d[0][self[0].id]
         for i in range(len(self)-1):
@@ -59,12 +63,39 @@ class Solution:
             route = self.routes[self.current_index]
             self.current_index += 1
             return route
+    def travel_time(self, p):
+        t = 0
+        for route in self:
+            t += route.travel_time(p)
+        return t
+    def fitness(self, p):
+        return self.travel_time(p)
+
 
 class Population:
     def __init__(self, pop_size, p):
         self.solutions = [Solution(p) for _ in range(pop_size)]
     def __getitem__(self, index):
         return self.solutions[index]
+    def __len__(self):
+        return len(self.solutions)
+    def __getitem__(self, index):
+        return self.solutions[index]
+    def __iter__(self):
+        self.current_index = 0
+        return self
+    def __next__(self):
+        if self.current_index >= len(self):
+            raise StopIteration
+        else:
+            solution = self[self.current_index]
+            self.current_index += 1
+            return solution
+    def sample(self, k):
+        return random.sample(self.solutions, k)
+    
+    
+    
 
 def generate_sub_arrays(N,n):
     arr = np.arange(1, N+1)
