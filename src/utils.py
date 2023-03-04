@@ -20,7 +20,7 @@ def generate_sub_arrays(N,n):
     arr = np.arange(1, N+1)
     permuted_arr = np.random.permutation(arr)
 
-    indices = np.random.choice(np.arange(2, N+1), size=n, replace=False)
+    indices = np.random.choice(np.arange(2, N+1), size=n-1, replace=False)
     indices.sort()
 
     sub_arrays = np.split(permuted_arr, indices)
