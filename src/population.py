@@ -1,5 +1,5 @@
 import numpy as np
-from utils import get_distance
+from utils import get_distance, generate_sub_arrays, tournament_selection
 import random
 
 class Route:
@@ -34,7 +34,6 @@ class Route:
             time += get_distance(d, self[i], self[i+1])
         time += d[self[-1].id][0]
         return time
-
 
 class Solution:
     def __init__(self, p) -> None:
@@ -73,8 +72,12 @@ class Solution:
 
 
 class Population:
-    def __init__(self, pop_size, p):
-        self.solutions = [Solution(p) for _ in range(pop_size)]
+    def __init__(self, pop_size, p, init="random", solutions=None):
+        assert init in ["random", "custom"], "`init` must either be 'random', or 'custom'"
+        if init == "custom" : assert solutions is not None, "Solutions `solutions`must be provided on custom init"
+        if init == "random" : self.solutions = [Solution(p) for _ in range(pop_size)]
+        elif init == "custom" : self.solutions = solutions
+            
     def __getitem__(self, index):
         return self.solutions[index]
     def __len__(self):
@@ -94,15 +97,11 @@ class Population:
     def sample(self, k):
         return random.sample(self.solutions, k)
     
-    
-    
 
-def generate_sub_arrays(N,n):
-    arr = np.arange(1, N+1)
-    permuted_arr = np.random.permutation(arr)
-
-    indices = np.random.choice(np.arange(2, N+1), size=n, replace=False)
-    indices.sort()
-
-    sub_arrays = np.split(permuted_arr, indices)
-    return np.array(sub_arrays, dtype=object)
+def get_parents(population, p):
+    pop_size = len(population)
+    parents = []
+    for i in range(pop_size):
+        parent = tournament_selection(population, p, k=3)
+        parents.append(parent)
+    return Population(pop_size, p, init="custom", solutions=parents)
