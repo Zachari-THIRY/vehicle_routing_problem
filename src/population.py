@@ -130,11 +130,15 @@ def mutate_population(population:Population,problem:Problem):
     """Takes as input a population, selects parents, applies crossver between different solutions, and then mutates each solution.
     """
     new_pop = get_parents(population, problem)
-    solutions = []
-    for solution in new_pop :
-        new_solution = Solution(problem, mutate_solution(solution))
-        solutions.append(new_solution)
-    return Population(population.pop_size, population.problem, init='custom', solutions = solutions)
+    new_solutions = []
+    for new_solution in new_pop :
+        new_solution = Solution(problem, mutate_solution(new_solution))
+        new_solutions.append(new_solution)
+
+    old_solutions = population.solutions
+    sorted_solutions = sorted(new_solutions + old_solutions, key=lambda x: x.fitness(problem), reverse=False)[0:16]
+
+    return Population(population.pop_size, population.problem, init='custom', solutions = sorted_solutions)
 
 def mutate_solution(s:Solution, n_mutations:int =3):
     """Does a crossover over a random selection of 2 routes from the solution,
