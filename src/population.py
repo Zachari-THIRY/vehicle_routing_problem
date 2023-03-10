@@ -117,6 +117,18 @@ class Population:
     
 # Parent selection
 def get_parents(population, p):
+    """
+    Parameters
+    ----------
+    population: Population
+        The population from which to sample parents.
+    p: Problem
+        The associated problem.
+    Returns
+    -------
+    new_pop: Population
+        Containing the selected parents from tournement_selection.
+    """
     pop_size = len(population)
     parents = []
     for i in range(pop_size):
@@ -129,20 +141,41 @@ def get_parents(population, p):
 def mutate_population(population:Population,problem:Problem):
     """Takes as input a population, selects parents, applies crossver between different solutions, and then mutates each solution.
     """
+    assert len(population) %2 == 0, "Population length must be even"
+
     new_pop = get_parents(population, problem)
-    new_solutions = []
-    for new_solution in new_pop :
-        new_solution = Solution(problem, mutate_solution(new_solution))
-        new_solutions.append(new_solution)
-
     old_solutions = population.solutions
-    sorted_solutions = sorted(new_solutions + old_solutions, key=lambda x: x.fitness(problem), reverse=False)[0:16]
+    xov_solutions = [] # list of route_indexes corresponding to solutions. Has to be converted to type Solution later.
+    # Crossover between parents
+    for i in range(len(new_pop)//2):
+        children = extra_cross_over(new_pop[i].matrix ,new_pop[i+1].matrix)
+        for child in children : 
+            xov_solutions.append(child)
 
+    # Mutate within solutions
+    mutated_solutions_idx = []
+    for new_solution in new_pop :
+        new_solution_idx = mutate_solution(new_solution)
+        mutated_solutions_idx.append(new_solution_idx)
+
+    # Transform list of route_indexes in list of solutions
+    new_solutions = [Solution(problem, route_indexes) for route_indexes in mutated_solutions_idx]
+    
+    # Pure elitism : 
+    sorted_solutions = sorted(new_solutions + old_solutions, key=lambda x: x.fitness(problem), reverse=False)[0:16]
     return Population(population.pop_size, population.problem, init='custom', solutions = sorted_solutions)
 
-def mutate_solution(s:Solution, n_mutations:int =3):
+# TODO : Check that it actualy performs n_mutations
+def mutate_solution(s:Solution, n_mutations:int = 3):
     """Does a crossover over a random selection of 2 routes from the solution,
     and does `n_mutations` within random roads.
+
+    Parameters
+    ----------
+    s : Solution
+        The solution to be mutated
+    n_mutations : int
+        The number of mutations to apply
         
     Returns
     -------
@@ -178,7 +211,6 @@ def inverse_mutation(parent):
         parent[i:j+1] = parent[i:j+1][::-1]
 
         return parent
-
 
 def intra_cross_over(p1,p2):
     """Does a crossover, within the routes of a same solution. Is called by intra_cross_over()
@@ -220,5 +252,53 @@ def intra_cross_over(p1,p2):
     
     # # c1_patients = 
     # return Route(c1_patients), Route(c2_patients)
+
+def extra_cross_over(p1, p2):
+    """
+    Selects a random splitting point (same for each parent), keeps the first part, 
+    and then completes if possible with elements from the other parent.
+    Parameters
+    ----------
+    p1 : np.ndarray
+        The matrix of parent solution 1
+    p2 : np.ndarray
+        The patrix of parent solution 2
+    """
+  
+
+    # Gathering the ids in order and lengths
+
+    p1_ids = np.concatenate([np.fromiter(subarr, dtype=int) for subarr in p1]).tolist()
+    p2_ids = np.concatenate([np.fromiter(subarr, dtype=int) for subarr in p2]).tolist()
+
+    p1_lengths = [len(row) for row in p1]
+    p2_lengths = [len(row) for row in p2]
+
+    # Finding crossover point
+    x_over_point = np.random.randint(1, len(p1_ids))
+
+    # Splitting
+    p1_head = p1_ids[:x_over_point]
+    p1_tail = p1_ids[x_over_point:]
+    p2_head = p2_ids[:x_over_point]
+    p2_tail = p2_ids[x_over_point:]
+
+    c1_ids = np.concatenate((p1_head, p2_tail), axis=0)
+    c2_ids = np.concatenate((p2_head, p1_tail), axis=0)
+
+    c1 = np.empty(len(p1_lengths), dtype=object)
+    c2 = np.empty(len(p2_lengths), dtype=object)
+
+    i1, i2 = 0,0
+    for i,l in enumerate(p1_lengths):
+        new_row =  c1_ids[i1:i1+l]
+        c1[i] = new_row
+        i1 += l
+    for i,l in enumerate(p2_lengths):
+        new_row =  c2_ids[i1:i1+l]
+        c2[i] = new_row
+        i2 += l    
+    
+    return c1, c2
 
 # Offspring surviving
