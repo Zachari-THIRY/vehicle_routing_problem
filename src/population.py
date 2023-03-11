@@ -44,8 +44,28 @@ class Solution:
         for route in self:
             t += route.travel_time(p)
         return t
-    def fitness(self, p):
-        return self.travel_time(p)
+    def late_time(self, p):
+        t = 0
+        for route in self:
+            t += route.late_time(p)
+        return t
+    def fitness(self, p, w: float = 1) -> float:
+        """
+        Returns the solution's fitness according to problem `p`, with weighted late_time by a factor of `w`.
+
+        Parameters
+        ----------
+        p : Problem
+            The problem at hand
+        w : float
+            The weight to five to late_time
+
+        Returns
+        -------
+        fitness : float
+            The fitness value of the given solution.
+        """
+        return self.travel_time(p) + w*self.late_time(p)
 
 
 class Population:
@@ -339,11 +359,14 @@ def smart_insert(parent, pid, p:Problem) -> np.ndarray:
     insert_penalties = []
     for row in parent:
         row_penalties = []
-        baseline = rte.get_route_from_ids(row, p).travel_time(p)
+        time_baseline = rte.get_route_from_ids(row, p).travel_time(p)
+        late_baseline = rte.get_route_from_ids(row, p).late_time(p)
         for i in range(len(row) + 1):
             new_row = dumb_insert(row, pid, index = i)
             new_route = rte.get_route_from_ids(new_row, p)
-            row_penalties.append(new_route.travel_time(p)-baseline)
+            penalty = new_route.travel_time(p) - time_baseline
+            penalty += new_route.late_time(p) - late_baseline
+            row_penalties.append(penalty)
         insert_penalties.append(row_penalties)
 
     # Retrieve best position
