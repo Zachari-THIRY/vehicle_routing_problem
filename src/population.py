@@ -15,6 +15,10 @@ class Route:
         self.patients = patients
         self.ids = np.array([patient.id for patient in patients])
 
+    def get_route_from_ids(ids, p):
+        patients = [p.patients[id] for id in ids]
+        return Route(patients)
+
     def __len__(self):
         return len(self.ids)
     
@@ -300,5 +304,89 @@ def extra_cross_over(p1, p2):
         i2 += l    
     
     return c1, c2
+
+def appendix_cross_over(p1,p2, problem):
+    """
+    Parameters
+    ----------
+    p1 : np.ndarray
+        The matrix of parent 1
+    p2 : np.ndarray
+        The matrix of parent 2
+
+    Returns
+    -------
+
+    c1, c2 : (np.ndarray, np.ndarray)
+        The offspring crossovers
+    """
+    assert len(p1) == len(p2), "Matrixes `p1` and `p2` should have the same number of rows"
+    L = len(p1)
+    pop = np.random.randint(1, L, 2)
+    
+    to_pop_pids = p1[pop[0]], p2[pop[1]] # Contains the routes to be popped
+
+    # Popping the routes in the other solution:
+    for index in range(L) :
+        p1[index] = np.setdiff1d(p1[index], to_pop_pids[1])
+        p2[index] = np.setdiff1d(p2[index], to_pop_pids[0])
+
+    # Re-inserting patients into the routes : 
+    np.random.shuffle(to_pop_pids[0])
+    np.random.shuffle(to_pop_pids[1])
+
+    for pid in to_pop_pids[1]:
+        p1 = smart_insert(p1, pid, problem)
+    for pid in to_pop_pids[0]:
+        p2 = smart_insert(p2, pid, problem)
+
+    return p1, p2
+                
+
+def smart_insert(parent, pid, p:Problem) -> np.ndarray:
+    """
+    Parameters
+    ----------
+    parent : np.ndarray
+        Matrix representation of parent
+    """
+    lengths = np.array([len(row) for row in parent])
+    lengths += 1
+
+    # Build insertion penalties matrix
+
+    insert_penalties = []
+    for row in parent:
+        row_penalties = []
+        baseline = Route.get_route_from_ids(row, p).travel_time(p)
+        for i in range(len(row) + 1):
+            new_row = dumb_insert(row, pid, index = i)
+            new_route = Route.get_route_from_ids(new_row, p)
+            row_penalties.append(new_route.travel_time(p)-baseline)
+        insert_penalties.append(row_penalties)
+
+    # Retrieve best position
+    min_value, min_index = min(
+    (val, (i, j))
+    for i, row in enumerate(insert_penalties)
+    for j, val in enumerate(row)
+    )
+    if min_value <= 0 : 
+        print("Minimum value:", min_value)
+        print("Index of minimum value:", min_index)
+        print("Route:", parent[min_index[0]])
+        print("Insert pid:", pid)
+
+    parent[min_index[0]] = dumb_insert(row = parent[min_index[0]], pid = pid, index = min_index[1])
+    return parent
+
+def dumb_insert(row, pid:int, index:int) -> np.ndarray:
+    """Inserts a pid in the specified index"""
+    new_row = np.insert(row, index, pid, axis=0)
+    return new_row
+
+# TODO : implement dumb_insert
+# TODO : implement get_route_from_ids
+# TODO : implement smart_insert
 
 # Offspring surviving
