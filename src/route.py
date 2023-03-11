@@ -41,6 +41,31 @@ class Route:
             time += get_distance(d, self[i], self[i+1])
         time += d[self[-1].id][0]
         return time
+    
+    def late_time(self, p) -> int:
+        if len(self) == 0 : return 0
+        d = p.d
+
+        t = 0
+        late_time = 0
+        prev_patient = None
+        for patient in self:
+            # Travelling there
+            t += get_distance(d, prev_patient, patient)
+            # Waiting before care if needed
+            if t < patient.start_time :
+                t  = patient.start_time
+            # Caring for the patient
+            t += patient.care_time
+            # Checking if care is finished in time
+            if t > patient.end_time:
+                late_time += t - patient.end_time
+            prev_patient = patient
+        # Adding time to come back to the depot
+        t += get_distance(d, prev_patient, None)
+        if t > p.depot.return_time:
+            late_time += t-p.depot.return_time
+        return late_time
 
 def get_route_from_ids(ids, p):
         patients = [p.patients[id] for id in ids]
