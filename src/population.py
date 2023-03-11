@@ -128,6 +128,7 @@ def get_parents(population, p):
         The population from which to sample parents.
     p: Problem
         The associated problem.
+
     Returns
     -------
     new_pop: Population
@@ -150,6 +151,7 @@ def mutate_population(population:Population,problem:Problem):
     new_pop = get_parents(population, problem)
     old_solutions = population.solutions
     xov_solutions = [] # list of route_indexes corresponding to solutions. Has to be converted to type Solution later.
+
     # Crossover between parents
     for i in range(len(new_pop)//2):
         children = extra_cross_over(new_pop[i].matrix ,new_pop[i+1].matrix)
@@ -385,8 +387,8 @@ def dumb_insert(row, pid:int, index:int) -> np.ndarray:
     new_row = np.insert(row, index, pid, axis=0)
     return new_row
 
-# TODO : implement dumb_insert
-# TODO : implement get_route_from_ids
-# TODO : implement smart_insert
+def fitness_from_matrix(solution_matrix, problem):
+    solution = Solution(p = problem, route_indexes=solution_matrix)
+    return solution.fitness(problem)
 
 # Offspring surviving
