@@ -1,51 +1,9 @@
 import numpy as np
-from utils import get_distance, generate_sub_arrays, tournament_selection
+from utils import generate_sub_arrays, tournament_selection
 import random
 from loader import Problem
+import route as rte
 
-class Route:
-    """
-    self.patients : python list of dtype Patient
-    self.ids : np.array of ids (used for computation, not representation)
-    """
-    def __init__(self, patients) -> None:
-        """
-        Takes as input : patients, the arrat of dtype Patient
-        """
-        self.patients = patients
-        self.ids = np.array([patient.id for patient in patients])
-
-    def get_route_from_ids(ids, p):
-        patients = [p.patients[id] for id in ids]
-        return Route(patients)
-
-    def __len__(self):
-        return len(self.ids)
-    
-    def __getitem__(self, index):
-        return self.patients[index]
-    
-    def __iter__(self):
-        self.current_index = 0
-        return self
-    
-    def __next__(self):
-        if self.current_index >= len(self.patients):
-            raise StopIteration
-        else:
-            patient = self.patients[self.current_index]
-            self.current_index += 1
-            return patient
-    def travel_time(self, p):
-
-        if len(self) == 0 : return 0
-
-        d = p.d
-        time = d[0][self[0].id]
-        for i in range(len(self)-1):
-            time += get_distance(d, self[i], self[i+1])
-        time += d[self[-1].id][0]
-        return time
 
 class Solution:
     def __init__(self, p, route_indexes:np.ndarray = None) -> None:
@@ -59,7 +17,7 @@ class Solution:
         route_indexes = generate_sub_arrays(p.nbr_patients, p.nbr_nurses) if route_indexes == None else route_indexes
         routes = []
         for route in route_indexes:
-            route = Route([p.patients[patient_id] for patient_id in route])
+            route = rte.Route([p.patients[patient_id] for patient_id in route])
             routes.append(route)
         self.routes = np.array(routes, dtype=object)
         self.matrix = route_indexes
@@ -358,8 +316,16 @@ def appendix_cross_over(p1,p2, problem):
 
     return p1, p2                
 
+# Offspring surviving
+
+# Utils
+def fitness_from_matrix(solution_matrix, problem):
+    solution = Solution(p = problem, route_indexes=solution_matrix)
+    return solution.fitness(problem)
+
 def smart_insert(parent, pid, p:Problem) -> np.ndarray:
     """
+    Insert the patient pid in the best possible place inside parent
     Parameters
     ----------
     parent : np.ndarray
@@ -373,10 +339,10 @@ def smart_insert(parent, pid, p:Problem) -> np.ndarray:
     insert_penalties = []
     for row in parent:
         row_penalties = []
-        baseline = Route.get_route_from_ids(row, p).travel_time(p)
+        baseline = rte.get_route_from_ids(row, p).travel_time(p)
         for i in range(len(row) + 1):
             new_row = dumb_insert(row, pid, index = i)
-            new_route = Route.get_route_from_ids(new_row, p)
+            new_route = rte.get_route_from_ids(new_row, p)
             row_penalties.append(new_route.travel_time(p)-baseline)
         insert_penalties.append(row_penalties)
 
@@ -393,9 +359,3 @@ def dumb_insert(row, pid:int, index:int) -> np.ndarray:
     """Inserts a pid in the specified index"""
     new_row = np.insert(row, index, pid, axis=0)
     return new_row
-
-def fitness_from_matrix(solution_matrix, problem):
-    solution = Solution(p = problem, route_indexes=solution_matrix)
-    return solution.fitness(problem)
-
-# Offspring surviving
