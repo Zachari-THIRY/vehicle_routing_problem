@@ -120,8 +120,10 @@ class Population:
         return random.sample(self.solutions, k)
     
 # Parent selection
-def get_parents(population, p):
+def get_parents(population: Population, p: Problem):
     """
+    Returns a population issued from parent_tournament
+
     Parameters
     ----------
     population: Population
@@ -145,18 +147,29 @@ def get_parents(population, p):
 
 def mutate_population(population:Population,problem:Problem):
     """Takes as input a population, selects parents, applies crossver between different solutions, and then mutates each solution.
+    Returns
+    -------
+    pop : Population
+        The population resulting from a sequence of parent_selection, appendix_crossover, intra_crossover and mutation
     """
     assert len(population) %2 == 0, "Population length must be even"
 
-    new_pop = get_parents(population, problem)
-    old_solutions = population.solutions
-    xov_solutions = [] # list of route_indexes corresponding to solutions. Has to be converted to type Solution later.
+    old_pop = population.solutions                          # Type Solution
+    new_pop = get_parents(population=population, p=problem)    # Type Solution, gets parents from tournament selection
+   
+    xov_solutions_matrixes = [] # List of Solution.matrix
 
     # Crossover between parents
     for i in range(len(new_pop)//2):
-        children = extra_cross_over(new_pop[i].matrix ,new_pop[i+1].matrix)
+        children = appendix_cross_over(p1 = new_pop[i].matrix ,p2 = new_pop[i+1].matrix, problem=problem)
         for child in children : 
-            xov_solutions.append(child)
+            xov_solutions_matrixes.append(child)
+    # updating new_pop with crossovers
+    new_pop = Population(
+        len(new_pop), 
+        p=problem, 
+        init="custom", 
+        solutions=xov_solutions_matrixes)
 
     # Mutate within solutions
     mutated_solutions_idx = []
@@ -168,18 +181,17 @@ def mutate_population(population:Population,problem:Problem):
     new_solutions = [Solution(problem, route_indexes) for route_indexes in mutated_solutions_idx]
     
     # Pure elitism : 
-    sorted_solutions = sorted(new_solutions + old_solutions, key=lambda x: x.fitness(problem), reverse=False)[0:16]
+    sorted_solutions = sorted(new_solutions + old_pop, key=lambda x: x.fitness(problem), reverse=False)[0:16]
     return Population(population.pop_size, population.problem, init='custom', solutions = sorted_solutions)
 
-# TODO : Check that it actualy performs n_mutations
-def mutate_solution(s:Solution, n_mutations:int = 3):
-    """Does a crossover over a random selection of 2 routes from the solution,
+def mutate_solution(solution_matrix: np.ndarray, n_mutations:int = 3):
+    """Does a crossover over a random selection of 2 routes from the solution matrix,
     and does `n_mutations` within random roads.
 
     Parameters
     ----------
-    s : Solution
-        The solution to be mutated
+    solution_matrix: np.ndarray()
+        The matrix of the solution to be mutated
     n_mutations : int
         The number of mutations to apply
         
@@ -188,15 +200,17 @@ def mutate_solution(s:Solution, n_mutations:int = 3):
         new_route_indexes : list(list(ids))
             A new solution's route_indexes with effectuated random_crossover.
     """
-    new_route_indexes = np.copy(s.matrix)
+    new_route_indexes = np.copy(solution_matrix)
 
     i,j = np.random.choice(len(new_route_indexes), 2)
     new_route_indexes[i], new_route_indexes[j] = intra_cross_over(new_route_indexes[i], new_route_indexes[j])
 
     mut_idx = np.random.choice(len(new_route_indexes), n_mutations)
+    c = 0
     for idx in mut_idx :
         new_route_indexes[idx] = inverse_mutation(new_route_indexes[idx])
-
+        c += 1  
+    
     return new_route_indexes
 
 def inverse_mutation(parent):
@@ -319,8 +333,8 @@ def appendix_cross_over(p1,p2, problem):
     Returns
     -------
 
-    c1, c2 : (np.ndarray, np.ndarray)
-        The offspring crossovers
+    c1, c2 : (np.ndarray, np.ndarray) 
+        The offspring crossovers as Solution.matrix
     """
     assert len(p1) == len(p2), "Matrixes `p1` and `p2` should have the same number of rows"
     L = len(p1)
@@ -342,8 +356,7 @@ def appendix_cross_over(p1,p2, problem):
     for pid in to_pop_pids[0]:
         p2 = smart_insert(p2, pid, problem)
 
-    return p1, p2
-                
+    return p1, p2                
 
 def smart_insert(parent, pid, p:Problem) -> np.ndarray:
     """
@@ -368,17 +381,11 @@ def smart_insert(parent, pid, p:Problem) -> np.ndarray:
         insert_penalties.append(row_penalties)
 
     # Retrieve best position
-    min_value, min_index = min(
+    _, min_index = min(
     (val, (i, j))
     for i, row in enumerate(insert_penalties)
     for j, val in enumerate(row)
     )
-    if min_value <= 0 : 
-        print("Minimum value:", min_value)
-        print("Index of minimum value:", min_index)
-        print("Route:", parent[min_index[0]])
-        print("Insert pid:", pid)
-
     parent[min_index[0]] = dumb_insert(row = parent[min_index[0]], pid = pid, index = min_index[1])
     return parent
 
