@@ -378,3 +378,25 @@ def dumb_insert(row, pid:int, index:int) -> np.ndarray:
     """Inserts a pid in the specified index"""
     new_row = np.insert(row, index, pid, axis=0)
     return new_row
+
+def round_robin_init(p):
+    """
+    From a problem p, generates a set of patient routes order based on their time windows.
+    
+    Parameters
+    ----------
+    p : Problem
+        The problem at hand
+    Returns
+    -------
+    route_indexes : np.ndarray
+        A set of route_indexes with smart initialisation.
+    """
+    pids = p.patients.keys()
+
+    sorted_pids = sorted(pids, key=lambda x : p.patients[x].start_time)
+    arr = np.empty(p.nbr_nurses, dtype=np.ndarray)
+    for i in range(len(arr)):
+        sub_arr = np.array([sorted_pids[j] for j in range(i, len(sorted_pids), len(arr))])
+        arr[i] = sub_arr
+    return np.array(arr)
