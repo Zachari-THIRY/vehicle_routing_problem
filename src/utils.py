@@ -21,7 +21,13 @@ def get_distance(d, p1, p2):
     pid2 = 0 if p2 == None else p2.id
     return d[pid1][pid2]
 
-def tournament_selection(population,p, k=3, w = 10):
+def tournament_selection(population,p, k=3, w = 1):
+    """
+    Returns
+    -------
+    winner : Solution
+        The winner of the parent tournament
+    """
     tournament = population.sample(k)
     winner = min(tournament, key=lambda x: x.fitness(p, w)) # Calculate fitness using fitness_func
     return winner
