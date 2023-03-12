@@ -142,16 +142,10 @@ def mutate_population(population:Population,problem:Problem):
         children = appendix_cross_over(p1 = new_pop[i].matrix ,p2 = new_pop[i+1].matrix, problem=problem)
         for child in children : 
             xov_solutions_matrixes.append(child)
-    # updating new_pop with crossovers
-    new_pop = Population(
-        len(new_pop), 
-        p=problem, 
-        init="custom", 
-        solutions=xov_solutions_matrixes)
 
     # Mutate within solutions
     mutated_solutions_idx = []
-    for new_solution in new_pop :
+    for new_solution in xov_solutions_matrixes :
         new_solution_idx = mutate_solution(new_solution)
         mutated_solutions_idx.append(new_solution_idx)
 
@@ -159,7 +153,7 @@ def mutate_population(population:Population,problem:Problem):
     new_solutions = [Solution(problem, route_indexes) for route_indexes in mutated_solutions_idx]
     
     # Pure elitism : 
-    sorted_solutions = sorted(new_solutions + old_pop, key=lambda x: x.fitness(problem), reverse=False)[0:16]
+    sorted_solutions = sorted(new_solutions + old_pop, key=lambda x: x.fitness(problem), reverse=False)[0:len(population)]
     return Population(population.pop_size, population.problem, init='custom', solutions = sorted_solutions)
 
 def mutate_solution(solution_matrix: np.ndarray, n_mutations:int = 3):
