@@ -9,7 +9,7 @@ class Route:
     """
     def __init__(self, patients) -> None:
         """
-        Takes as input : patients, the arrat of dtype Patient
+        Takes as input : patients, the array of dtype Patient
         """
         self.patients = patients
         self.ids = np.array([patient.id for patient in patients])
