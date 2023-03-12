@@ -14,13 +14,15 @@ class Solution:
             a list of id for the routes
         """
         # If roue_indexes is not provided, build according to problem parameters. Else, use route_indexes
-        route_indexes = generate_sub_arrays(p.nbr_patients, p.nbr_nurses) if route_indexes == None else route_indexes
+        route_indexes = generate_sub_arrays(p.nbr_patients, p.nbr_nurses) if route_indexes is None else route_indexes
         routes = []
         for route in route_indexes:
-            route = rte.Route([p.patients[patient_id] for patient_id in route])
+            patients = [p.patients[patient_id] for patient_id in route]
+            route = rte.Route(patients)
             routes.append(route)
-        self.routes = np.array(routes, dtype=object)
+        self.routes = routes
         self.matrix = route_indexes
+        self.p = p
 
     def __len__(self):
         return len(self.routes)
