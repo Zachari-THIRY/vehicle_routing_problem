@@ -1,5 +1,40 @@
 import numpy as np
 from operators.core.route import get_route_from_ids
+from operators.core.loader import Problem
+
+def crossovers(solutions:list,problem:Problem, parameters:dict):
+    """
+    Applies crossover over a whole list of solutions.
+
+    Parameters
+    ----------
+    solutions: list
+        A list of solution matrixes
+    Returns
+    -------
+    xov_solution_matrixes : list(np.ndarray 2D)
+        The solution matrixes after applied crossovers
+    """
+    xov_solutions_matrixes = []
+    for i in range(len(solutions)//2):
+        children = crossover(p1 = solutions[i].matrix ,p2 = solutions[i+1].matrix, problem=problem, parameters=parameters)
+        for child in children : 
+            xov_solutions_matrixes.append(child)
+    return xov_solutions_matrixes
+
+def crossover(p1,p2, problem ,parameters):
+
+    available_modes = ["appendix", "extra"]
+
+    parameters = parameters["crossover_parameters"]
+    mode = parameters["mode"]
+    fitness = parameters["fitness"]
+    assert mode in available_modes, "Parameter mode bust be in {AVAILABLE_MODES} but {MODE} was given.".format(AVAILABLE_MODES = available_modes, MODE = mode)
+
+    if mode == available_modes[0]:
+        return appendix_cross_over(p1,p2, problem, fitness)
+    if mode == available_modes[1]:
+        return extra_cross_over(p1,p2)
 
 def extra_cross_over(p1, p2):
     """
@@ -10,7 +45,7 @@ def extra_cross_over(p1, p2):
     p1 : np.ndarray
         The matrix of parent solution 1
     p2 : np.ndarray
-        The patrix of parent solution 2
+        The matrix of parent solution 2
     """
   
 
@@ -49,7 +84,7 @@ def extra_cross_over(p1, p2):
     
     return c1, c2
 
-def appendix_cross_over(p1,p2, problem):
+def appendix_cross_over(p1,p2, problem:Problem, fitness:str):
     """
     Parameters
     ----------
@@ -57,6 +92,10 @@ def appendix_cross_over(p1,p2, problem):
         The matrix of parent 1
     p2 : np.ndarray
         The matrix of parent 2
+    problem : Problem
+        The problem at hand
+    fitness : str
+        The specified fitness : "fitness", "travel_time" or "late_time"
 
     Returns
     -------
@@ -80,13 +119,13 @@ def appendix_cross_over(p1,p2, problem):
     np.random.shuffle(to_pop_pids[1])
 
     for pid in to_pop_pids[1]:
-        p1 = smart_insert(p1, pid, problem)
+        p1 = smart_insert(p1, pid, problem, fitness)
     for pid in to_pop_pids[0]:
-        p2 = smart_insert(p2, pid, problem)
+        p2 = smart_insert(p2, pid, problem, fitness)
 
     return p1, p2                
 
-def smart_insert(parent, pid, p) -> np.ndarray:
+def smart_insert(parent, pid, p, fitness:str) -> np.ndarray:
     """
     Insert the patient pid in the best possible place inside parent
     Parameters
@@ -97,6 +136,8 @@ def smart_insert(parent, pid, p) -> np.ndarray:
         The patient id.
     p : Problem
         The problem at hand.
+    fitness : str
+        With values in ["fitness", "travel_time", "late_time"], specifies which fitness to use to insert the rows.
     """
     lengths = np.array([len(row) for row in parent])
     lengths += 1
@@ -109,10 +150,13 @@ def smart_insert(parent, pid, p) -> np.ndarray:
         time_baseline = get_route_from_ids(row, p).travel_time(p)
         late_baseline = get_route_from_ids(row, p).late_time(p)
         for i in range(len(row) + 1):
+            penalty = 0
             new_row = dumb_insert(row, pid, index = i)
             new_route = get_route_from_ids(new_row, p)
-            penalty = new_route.travel_time(p) - time_baseline
-            penalty += new_route.late_time(p) - late_baseline
+            if fitness in ["fitness", "travel_time"]:
+                penalty += new_route.travel_time(p) - time_baseline
+            if fitness in ["fitness", "late_time"]:
+                penalty += new_route.late_time(p) - late_baseline
             row_penalties.append(penalty)
         insert_penalties.append(row_penalties)
 
