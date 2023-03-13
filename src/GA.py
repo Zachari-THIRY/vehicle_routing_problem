@@ -14,7 +14,7 @@ def mutate_population(population:Population,problem:Problem):
     assert len(population) %2 == 0, "Population length must be even"
 
     old_pop = population.solutions                          # Type Solution
-    new_pop = parent_selection(population=population, p=problem, mode="tournament")    # Type Solution, gets parents from tournament selection
+    new_pop = parent_selection(population=population, p=problem, mode="tournament", parameters=len(population))    # Type Solution, gets parents from tournament selection
    
     xov_solutions_matrixes = [] # List of Solution.matrix
 
