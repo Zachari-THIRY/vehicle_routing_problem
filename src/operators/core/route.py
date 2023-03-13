@@ -1,6 +1,5 @@
 import numpy as np
-
-from utils import get_distance
+from operators.core.utils import get_distance
 
 class Route:
     """
