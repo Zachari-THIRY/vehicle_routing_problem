@@ -11,12 +11,35 @@ import GA
 
 parameters = {
     "parent_selection" : {
-                        "mode" : "full_elitism",
-                        "parameters" : 16,
-                    },
+        "mode" : "tournament",
+        "parameters" : 16,
+        ### Parameters for each mode ###
+        "full_elitism" : {
+            "n_elites": 16,
+            "fitness": "late_time",     # can be in ["fitness", "travel_time", "late_time"]
+            "w_fitness": 1
+        },
+        "tournament" : {
+            "fitness": "fitness",   # can be in ["fitness", "travel_time", "late_time"]
+            "w_fitness" : 1,
+            "k_opponents" : 3,
+            "n_parents": 16
+        },
+        "n_elitism+k_tournaments":{
+            "fitness": "fitness",
+            "w_fitness": 1,
+            "n_elites": 3,          # The number of parents in the elite section
+            "n_parents": 13,        # The number of parents in the tournament section
+            "k_opponents": 3,
+        }
+        ### End of modes ###
+    },
     "crossover_parameters" : {
-        "mode" : "appendix"
-    }
+        "mode" : "appendix",        # can be in ["appendix", "extra"]
+        "fitness" : "fitness"       # can be in ["fitness", "travel_time", "late_time"]
+    },
+    "print_period" : 10,
+    "mixed_init": False
 }
 
 p = loader.Problem("data/train_0.json")
@@ -27,20 +50,21 @@ round_robin_matrixes = round_robin_init(p)
 rob_sol = population.Solution(p=p, route_indexes=round_robin_matrixes)
 solutions = [rob_sol]*6
 
-for _ in range(10):
-    solutions.append(population.Solution(p=p))
-pop = population.Population(
-    pop_size=16,
-    p = p,
-    init="custom",
-    solutions=solutions
-)
+if parameters["mixed_init"]:
+    for _ in range(10):
+        solutions.append(population.Solution(p=p))
+    pop = population.Population(
+        pop_size=16,
+        p = p,
+        init="custom",
+        solutions=solutions
+    )
 ### Running the GA ###
 
 start = time.time()
-for i in range(100):
+for i in range(10):
     pop = GA.mutate_population(pop, p, parameters=parameters)
-    if i %50 == 0 : 
+    if i % parameters["print_period"] == 0 : 
         display_round_info(pop, p, i)
 
 display_round_info(population = pop, problem = p, epoch="end")
