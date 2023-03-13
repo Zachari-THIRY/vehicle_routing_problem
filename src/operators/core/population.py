@@ -105,6 +105,17 @@ class Population:
             self.current_index += 1
             return solution
     def sample(self, k):
+        """
+        Selects `k` random solutions taken from the population. Allows multi-picking of same solution.
+        Parameters
+        ----------
+        k : int
+            The number of random solutions to select.
+        Returns
+        -------
+        solutions: list(Solutions)
+            `k` randomly selected solutions from the population.
+        """
         return random.sample(self.solutions, k)
     def get_best_time_population(self):
         return min(self, key=lambda x: x.travel_time(self.problem))
