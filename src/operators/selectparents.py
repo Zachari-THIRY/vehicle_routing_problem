@@ -17,7 +17,7 @@ def parent_selection(population, p, parameters:dict):
     Returns
     -------
     new_pop: Population
-        Containing the selected parents from tournement_selection.
+        Containing the selected parents.
     """
     modes = ["tournament", "full_elitism", "n_elitism+k_tournaments"]
     mode = parameters["parent_selection"]["mode"]
