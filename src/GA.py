@@ -2,7 +2,7 @@ from operators.core.population import Population, Solution
 from operators.selectparents import parent_selection
 from operators.core.loader import Problem
 from operators.mutations import mutate_solution
-from operators.crossovers import appendix_cross_over
+from operators.crossovers import appendix_cross_over, crossovers
 
 def mutate_population(population:Population,problem:Problem, parameters: dict):
     """Takes as input a population, selects parents, applies crossver between different solutions, and then mutates each solution.
@@ -15,14 +15,8 @@ def mutate_population(population:Population,problem:Problem, parameters: dict):
 
     old_solutions = population.solutions                          # Type Solution
     new_solutions = parent_selection(population=population, p=problem, parameters=parameters)    # Type Solution, gets parents from tournament selection
-   
-    xov_solutions_matrixes = [] # List of Solution.matrix
 
-    # Crossover between parents
-    for i in range(len(new_solutions)//2):
-        children = appendix_cross_over(p1 = new_solutions[i].matrix ,p2 = new_solutions[i+1].matrix, problem=problem)
-        for child in children : 
-            xov_solutions_matrixes.append(child)
+    xov_solutions_matrixes = crossovers(new_solutions, problem=problem, parameters=parameters)
 
     # Mutate within solutions
     mutated_solutions_idx = []
