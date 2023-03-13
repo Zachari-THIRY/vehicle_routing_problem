@@ -1,14 +1,15 @@
 import numpy as np
 from operators.core.route import get_route_from_ids
 from operators.core.loader import Problem
+from operators.core.population import Population
 
-def crossovers(solutions:list,problem:Problem, parameters:dict):
+def crossovers(population:Population,problem:Problem, parameters:dict):
     """
-    Applies crossover over a whole list of solutions.
+    Applies crossover over a whole population.
 
     Parameters
     ----------
-    solutions: list
+    population : Population
         A list of solution matrixes
     Returns
     -------
@@ -16,13 +17,25 @@ def crossovers(solutions:list,problem:Problem, parameters:dict):
         The solution matrixes after applied crossovers
     """
     xov_solutions_matrixes = []
-    for i in range(len(solutions)//2):
-        children = crossover(p1 = solutions[i].matrix ,p2 = solutions[i+1].matrix, problem=problem, parameters=parameters)
+    for i in range(len(population)//2):
+        children = crossover(p1 = population[i].matrix ,p2 = population[i+1].matrix, problem=problem, parameters=parameters)
         for child in children : 
             xov_solutions_matrixes.append(child)
     return xov_solutions_matrixes
 
-def crossover(p1,p2, problem ,parameters):
+def crossover(p1:np.ndarray,p2:np.ndarray, problem:Problem ,parameters:dict):
+    """Selects crossover according to parameters and execute said crossover. Returns children.
+    Parameters
+    ----------
+    p1 : np.ndarray
+        Matrix of parent 1.
+    p2 : np.ndarray
+        Matrix of parent 2.
+    problem : Problem
+        The problem at hand.
+    parameters : dict
+        The parameters fromn which the relevant crossover is selected and applied.    
+    """
 
     available_modes = ["appendix", "extra"]
 
@@ -47,7 +60,6 @@ def extra_cross_over(p1, p2):
     p2 : np.ndarray
         The matrix of parent solution 2
     """
-  
 
     # Gathering the ids in order and lengths
 
