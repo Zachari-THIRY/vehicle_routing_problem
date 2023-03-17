@@ -21,7 +21,7 @@ def mutate_population(population:Population,problem:Problem, parameters: dict):
     # Mutate within solutions
     mutated_solutions_idx = []
     for new_solution in xov_solutions_matrixes :
-        new_solution_idx = mutate_solution(new_solution)
+        new_solution_idx = mutate_solution(new_solution,problem=problem, parameters=parameters)
         mutated_solutions_idx.append(new_solution_idx)
 
     # Transform list of route_indexes in list of solutions
