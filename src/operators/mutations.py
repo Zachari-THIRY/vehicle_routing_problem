@@ -1,5 +1,7 @@
 import numpy as np
-def mutate_solution(solution_matrix: np.ndarray, n_mutations:int = 3):
+from operators.crossovers import smart_insert
+from operators.core.loader import Problem
+def mutate_solution(solution_matrix: np.ndarray, problem:Problem, parameters:dict, n_mutations:int = 3):
     """Does a crossover over a random selection of 2 routes from the solution matrix,
     and does `n_mutations` within random roads.
 
@@ -9,24 +11,58 @@ def mutate_solution(solution_matrix: np.ndarray, n_mutations:int = 3):
         The matrix of the solution to be mutated
     n_mutations : int
         The number of mutations to apply
-        
+    parameters : the global_parameters
     Returns
     -------
         new_route_indexes : list(list(ids))
             A new solution's route_indexes with effectuated random_crossover.
     """
+    parameters = parameters["mutation_parameters"]
+    mode = parameters["mode"]
     new_route_indexes = np.copy(solution_matrix)
 
     i,j = np.random.choice(len(new_route_indexes), 2)
     new_route_indexes[i], new_route_indexes[j] = intra_cross_over(new_route_indexes[i], new_route_indexes[j])
 
-    mut_idx = np.random.choice(len(new_route_indexes), n_mutations)
-    c = 0
-    for idx in mut_idx :
-        new_route_indexes[idx] = inverse_mutation(new_route_indexes[idx])
-        c += 1  
+    if mode == "inverse":
+        mut_idx = np.random.choice(len(new_route_indexes), n_mutations)
+        c = 0
+        for idx in mut_idx :
+            new_route_indexes[idx] = mutate_route(new_route_indexes[idx], problem=problem, parameters=parameters)
+            c += 1  
+    
+    elif mode == "appendix":
+            new_route_indexes = appendix_mutation(parent = new_route_indexes, p = problem, fitness = parameters["fitness"])
     
     return new_route_indexes
+
+def mutate_route(route_indexes:np.ndarray, problem:Problem, parameters:dict):
+    """
+    route_indexes : np.ndarray
+        a 1D array of patient ids (definint a route)
+    parameters : dict
+        The mutation_parameters
+    """
+    mode = parameters["mode"]
+    modes = ["inverse", "appendix"]
+    assert mode in modes, "Mutation parameter `mode` must be in {}".format(modes)
+
+    if mode == modes[0]:
+        return inverse_mutation(route_indexes)
+    elif mode == modes[1]:
+        return appendix_mutation(parent = route_indexes, p = problem, fitness = parameters["fitness"])
+
+
+def appendix_mutation(parent:np.ndarray,p, fitness:str):
+    L = np.shape(parent)[0]
+    pop_idx = np.random.randint(0, len(parent))
+    pop_row = parent[pop_idx]
+    for i in range(L):
+        parent[i] = np.setdiff1d(parent[i], pop_row)
+    
+    for pid in pop_row:
+        parent = smart_insert(parent, pid, p, fitness)
+    return parent
 
 def inverse_mutation(parent):
     """ Takes as input a route p1 and performs in-place inverse mutation
