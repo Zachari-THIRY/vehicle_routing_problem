@@ -22,37 +22,42 @@ parameters = {
         "tournament" : {
             "fitness": "fitness",   # can be in ["fitness", "travel_time", "late_time"]
             "w_fitness" : 1,
-            "k_opponents" : 3,
-            "n_parents": 16
+            "k_opponents" : 2,
+            "n_parents": 100
         },
         "n_elitism+k_tournaments":{
-            "fitness": "fitness",
+            "fitness": "travel_time",
             "w_fitness": 1,
             "n_elites": 3,          # The number of parents in the elite section
-            "n_parents": 13,        # The number of parents in the tournament section
-            "k_opponents": 3,
+            "n_parents": 27,        # The number of parents in the tournament section
+            "k_opponents": 2,
         }
         ### End of modes ###
     },
     "crossover_parameters" : {
         "mode" : "appendix",        # can be in ["appendix", "extra"]
-        "fitness" : "fitness"       # can be in ["fitness", "travel_time", "late_time"]
+        "fitness" : "travel_time"       # can be in ["fitness", "travel_time", "late_time"]
+    },
+    "mutation_parameters": {
+        "mode": "None",         # can be in ["appendix", "inverse", "None"]
+        "fitness" : "travel_time"       # can be in ["fitness", "travel_time", "late_time"]
     },
     "print_period" : 10,
     "mixed_init": False
 }
 
 p = loader.Problem("data/train_0.json")
-pop = population.Population(16, p)
+pop = population.Population(30, p)
 
 # Mixed initialisation
 round_robin_matrixes = round_robin_init(p)
 rob_sol = population.Solution(p=p, route_indexes=round_robin_matrixes)
-solutions = [rob_sol]*6
+solutions = [rob_sol]*16
 
 if parameters["mixed_init"]:
     for _ in range(10):
-        solutions.append(population.Solution(p=p))
+        # solutions.append(population.Solution(p=p))
+        pass
     pop = population.Population(
         pop_size=16,
         p = p,
@@ -77,3 +82,4 @@ print("Elapsed time:\t", elapsed_time)
 ### Saving solutions ###
 
 display_solution(pop.get_best_time_population(), p, "none")
+display_solution(pop[0], p, "none")
